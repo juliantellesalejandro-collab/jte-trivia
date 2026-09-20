@@ -12,12 +12,54 @@ Juego de preguntas y respuestas en español para terminal, con modo **online** e
 
 ## Instalación
 
+El proyecto es 100% portable: solo usa la biblioteca estándar de Python 3, no instala dependencias, y funciona en cualquier distro de Linux (Debian/Ubuntu, Fedora, Arch, openSUSE, Alpine, ...).
+
+### Opción rápida — instalador
+
+Detecta tu distro, instala `python3` si falta, copia los archivos a `~/juegos` y deja el comando `trivia` listo:
+
 ```bash
-# Con descarga directa
 git clone https://github.com/juliantellesalejandro-collab/jte-trivia.git
 cd jte-trivia
+./instalar.sh
+```
 
-# Probarlo (sin servidor, modo local)
+Al terminar, abre una terminal nueva y escribe `trivia`.
+
+### Opción manual — según distro
+
+```bash
+# Debian / Ubuntu / Mint
+sudo apt-get install -y python3
+cd jte-trivia
+python3 trivia.py
+
+# Fedora / RHEL / Rocky
+sudo dnf install -y python3
+cd jte-trivia
+python3 trivia.py
+
+# Arch / Manjaro
+sudo pacman -S python
+cd jte-trivia
+python3 trivia.py
+
+# openSUSE
+sudo zypper install python3
+cd jte-trivia
+python3 trivia.py
+
+# Alpine
+sudo apk add python3
+cd jte-trivia
+python3 trivia.py
+```
+
+### Sin git (solo descargar el zip)
+
+```bash
+curl -L -o jte-trivia.zip https://github.com/juliantellesalejandro-collab/jte-trivia/archive/refs/heads/main.zip
+unzip jte-trivia.zip && cd jte-trivia-main
 python3 trivia.py
 ```
 
