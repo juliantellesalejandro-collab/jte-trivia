@@ -97,6 +97,6 @@ Si el servidor no responde en ~3 segundos, el juego pasa a modo local sin romper
 
 ## Archivos de datos
 
-- En modo local se guardan junto a `trivia.py`: `usuarios.json`, `rankings.json`, `resultados.json`, `.trivia_records.txt`, `.historial.json`.
+- En modo local se guardan junto a `trivia.py`: `usuarios.json`, `privados.json`, `rankings.json`, `resultados.json`, `.trivia_records.txt`, `.historial.json`.
 - El servidor guarda su copia en `servidor_datos/`.
 - Todos estos archivos y la config de red están en `.gitignore`.

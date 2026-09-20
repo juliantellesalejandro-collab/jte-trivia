@@ -19,8 +19,10 @@ DATOS = os.path.join(BASE, "servidor_datos")
 USUARIOS = os.path.join(DATOS, "usuarios.json")
 RANKINGS = os.path.join(DATOS, "rankings.json")
 RESULTADOS = os.path.join(DATOS, "resultados.json")
+PRIVADOS = os.path.join(DATOS, "privados.json")
 
-LOCKS = {"usuarios": threading.Lock(), "rankings": threading.Lock(), "resultados": threading.Lock()}
+LOCKS = {"usuarios": threading.Lock(), "rankings": threading.Lock(), "resultados": threading.Lock(),
+         "privados": threading.Lock()}
 
 
 def cargar(ruta, por_defecto):
@@ -63,6 +65,24 @@ def registrar(nombre, clave):
 def login(nombre, clave):
     usuarios = cargar(USUARIOS, {})
     return usuarios.get(nombre) == hash_clave(nombre, clave)
+
+
+def cargar_privados():
+    return {str(n) for n in cargar(PRIVADOS, [])}
+
+
+def es_privado(nombre):
+    return nombre in cargar_privados()
+
+
+def marcar_privado(nombre, valor):
+    with LOCKS["privados"]:
+        privados = cargar_privados()
+        if valor:
+            privados.add(nombre)
+        else:
+            privados.discard(nombre)
+        guardar(PRIVADOS, sorted(privados))
 
 
 def registrar_resultado(nombre, aciertos, total):
@@ -149,7 +169,9 @@ class Manejador(BaseHTTPRequestHandler):
             nombre = q.get("nombre", [""])[0]
             return self.respuesta(200, {"existe": nombre in cargar(USUARIOS, {})})
         if ruta == "/api/jugadores":
-            nombres = sorted(cargar(USUARIOS, {}).keys())
+            yo = q.get("yo", [""])[0]
+            nombres = sorted(n for n in cargar(USUARIOS, {}).keys()
+                             if n == yo or not es_privado(n))
             return self.respuesta(200, {"nombres": nombres})
         if ruta == "/api/stats":
             nombre = q.get("nombre", [""])[0]
@@ -161,13 +183,19 @@ class Manejador(BaseHTTPRequestHandler):
                     total += r.get("total", 0)
             return self.respuesta(200, {"partidas": partidas, "aciertos": aciertos, "total": total})
         if ruta == "/api/ranking":
-            return self.respuesta(200, {"ranking": ranking_ordenado()})
+            yo = q.get("yo", [""])[0]
+            ranking = [(n, d) for n, d in ranking_ordenado() if n == yo or not es_privado(n)]
+            return self.respuesta(200, {"ranking": ranking})
         if ruta == "/api/periodo":
             try:
                 dias = int(q.get("dias", ["7"])[0])
             except ValueError:
                 dias = 7
-            return self.respuesta(200, {"tabla": mejores_periodo(dias)})
+            yo = q.get("yo", [""])[0]
+            tabla = [x for x in mejores_periodo(dias) if x.get("usuario") == yo or not es_privado(x.get("usuario", ""))]
+            return self.respuesta(200, {"tabla": tabla})
+        if ruta == "/api/privados":
+            return self.respuesta(200, {"privados": sorted(cargar_privados())})
         return self.respuesta(404, {"ok": False, "error": "no encontrado"})
 
     def do_POST(self):
@@ -185,6 +213,13 @@ class Manejador(BaseHTTPRequestHandler):
 
         if ruta == "/api/login":
             return self.respuesta(200, {"ok": login(nombre, clave)})
+
+        if ruta == "/api/privado":
+            if not login(nombre, clave):
+                return self.respuesta(200, {"ok": False, "error": "nombre o contraseña incorrectos"})
+            nuevo = bool(cuerpo.get("privado", False))
+            marcar_privado(nombre, nuevo)
+            return self.respuesta(200, {"ok": True, "privado": nuevo})
 
         if ruta == "/api/resultado":
             if not login(nombre, clave):
@@ -212,7 +247,7 @@ def main():
     print(f"  Escuchando en 0.0.0.0:{puerto} (toda la red local)")
     print(f"  Datos en: {DATOS}")
     print("  Otros jugadores deben configurar TRIVIA_SERVIDOR=http://IP_DEL_SERVIDOR:8090")
-    print("  ✦ Hecho por juliantelles • 2026 · v1.1 ✦")
+    print("  ✦ Hecho por juliantelles • 2026 · v1.2 ✦")
     ThreadingHTTPServer(("0.0.0.0", puerto), Manejador).serve_forever()
 
 

@@ -22,7 +22,7 @@ else:
     import tty
 
 NOMBRE_JUGADOR = ""
-VERSION = "1.1"
+VERSION = "1.2"
 
 PREGUNTAS = {
     "Ciencia": [
@@ -217,11 +217,12 @@ def menu_principal():
     print("  [3] 📝 Preguntas personalizadas")
     print("  [4] 🏆 Clasificación (Ranked)")
     print("  [5] 📊 Ver mis récords")
+    print("  [6] 🔒 Cuenta privada")
     print("  [0] Salir")
 
     while True:
         opcion = input("  Elige una opción: ").strip()
-        if opcion in ("1", "2", "3", "4", "5", "0"):
+        if opcion in ("1", "2", "3", "4", "5", "6", "0"):
             return opcion
         print("  ⚠ Opción inválida, intenta de nuevo.")
 
@@ -581,14 +582,15 @@ def ver_ranking():
     print(MORADO + NEGRITA + "  🏆 CLASIFICACIÓN (RANKED)" + RESET)
     separador()
     if servidor_online():
-        resp = pedir_http("/api/ranking")
+        resp = pedir_http("/api/ranking?" + urllib.parse.urlencode({"yo": NOMBRE_JUGADOR}))
         if resp and "ranking" in resp:
-            orden = [(n, d) for n, d in resp["ranking"]]
+            orden = [(n, d) for n, d in resp["ranking"] if es_visible(n)]
         else:
             SERVIDOR_EN_LINEA = False
             orden = sorted(cargar_rankings().items(), key=lambda kv: kv[1]["rating"], reverse=True)
     else:
         orden = sorted(cargar_rankings().items(), key=lambda kv: kv[1]["rating"], reverse=True)
+    orden = [(n, d) for n, d in orden if es_visible(n)]
     if not orden:
         print("\n  Todavía no hay clasificación.")
         print("  Juega una partida para entrar al ranking.")
@@ -642,15 +644,16 @@ def ver_mejores(dias, etiqueta):
     print(MORADO + NEGRITA + "  " + etiqueta + RESET)
     separador()
     if servidor_online():
-        resp = pedir_http("/api/periodo?" + urllib.parse.urlencode({"dias": dias}))
+        resp = pedir_http("/api/periodo?" + urllib.parse.urlencode({"dias": dias, "yo": NOMBRE_JUGADOR}))
         if resp and "tabla" in resp:
             tabla = [(n["usuario"], {"aciertos": n["aciertos"], "partidas": n["partidas"]})
-                     for n in resp["tabla"]]
+                     for n in resp["tabla"] if es_visible(n["usuario"])]
         else:
             SERVIDOR_EN_LINEA = False
             tabla = mejores_del_periodo(dias)
     else:
         tabla = mejores_del_periodo(dias)
+    tabla = [(n, d) for n, d in tabla if es_visible(n)]
     if not tabla:
         print("\n  Sin datos en este periodo todavía.")
         print("  🎮 Juega una partida para aparecer aquí.")
@@ -674,14 +677,15 @@ def ver_jugadores():
     print(MORADO + NEGRITA + "  👥 JUGADORES REGISTRADOS" + RESET)
     separador()
     if servidor_online():
-        resp = pedir_http("/api/jugadores")
+        resp = pedir_http("/api/jugadores?" + urllib.parse.urlencode({"yo": NOMBRE_JUGADOR}))
         if resp and "nombres" in resp:
-            usuarios = {n: "" for n in resp["nombres"]}
+            usuarios = {n: "" for n in resp["nombres"] if es_visible(n)}
         else:
             SERVIDOR_EN_LINEA = False
             usuarios = cargar_usuarios()
     else:
         usuarios = cargar_usuarios()
+    usuarios = {n: "" for n in usuarios if es_visible(n)}
     if not usuarios:
         print("\n  Nadie se ha registrado todavía.")
     else:
@@ -913,6 +917,123 @@ def guardar_usuarios(usuarios):
         json.dump(usuarios, f, ensure_ascii=False, indent=2)
 
 
+PRIVADOS = os.path.join(BASE_DIR, "privados.json")
+
+
+def cargar_privados():
+    if not os.path.exists(PRIVADOS):
+        return set()
+    try:
+        with open(PRIVADOS, encoding="utf-8") as f:
+            datos = json.load(f)
+        if isinstance(datos, list):
+            return {str(n) for n in datos}
+    except (ValueError, OSError):
+        pass
+    return set()
+
+
+def guardar_privados(privados):
+    try:
+        with open(PRIVADOS, "w", encoding="utf-8") as f:
+            json.dump(sorted(privados), f, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
+
+
+def es_privado(nombre):
+    if servidor_online():
+        resp = pedir_http("/api/privados")
+        if resp and isinstance(resp.get("privados"), list):
+            return nombre in {str(n) for n in resp["privados"]}
+    return nombre in cargar_privados()
+
+
+def es_visible(nombre):
+    if nombre == NOMBRE_JUGADOR:
+        return True
+    return not es_privado(nombre)
+
+
+def cambiar_estado_cuenta(nuevo_estado):
+    if servidor_online():
+        clave = leer_contraseña(f"  Contraseña de '{NOMBRE_JUGADOR}' para confirmar: ")
+        resp = pedir_http("/api/privado", {"nombre": NOMBRE_JUGADOR, "clave": clave, "privado": nuevo_estado})
+        if not resp or not resp.get("ok"):
+            return False, "Contraseña incorrecta o servidor no disponible."
+        privados = cargar_privados()
+        if nuevo_estado:
+            privados.add(NOMBRE_JUGADOR)
+        else:
+            privados.discard(NOMBRE_JUGADOR)
+        guardar_privados(privados)
+        SERVIDOR_EN_LINEA = True
+        return True, ""
+    usuarios = cargar_usuarios()
+    if NOMBRE_JUGADOR not in usuarios:
+        return False, "Tu cuenta no está registrada en esta máquina."
+    clave = leer_contraseña(f"  Contraseña de '{NOMBRE_JUGADOR}' para confirmar: ")
+    if hash_contraseña(NOMBRE_JUGADOR, clave) != usuarios[NOMBRE_JUGADOR]:
+        return False, "Contraseña incorrecta."
+    privados = cargar_privados()
+    if nuevo_estado:
+        privados.add(NOMBRE_JUGADOR)
+    else:
+        privados.discard(NOMBRE_JUGADOR)
+    guardar_privados(privados)
+    return True, ""
+
+
+def menu_cuenta():
+    while True:
+        limpiar_pantalla()
+        titulo()
+        print()
+        print(MORADO + NEGRITA + "  🔒 CUENTA PRIVADA" + RESET)
+        separador()
+        privada = es_privado(NOMBRE_JUGADOR)
+        print(f"\n  Cuenta: 🎮 {NOMBRE_JUGADOR}")
+        if privada:
+            print("  Estado: " + VERDE + "🔒 Privada — los demás NO verán tus datos ni tu nombre." + RESET)
+            print("  [1] 🌐 Hacer mi cuenta pública")
+        else:
+            print("  Estado: " + AMARILLO + "🌐 Pública — todos pueden ver tus datos y tu nombre." + RESET)
+            print("  [1] 🔒 Hacer mi cuenta privada")
+        print("  [2] 👀 Ver cómo me ven los demás")
+        print("  [0] ↩ Volver al menú")
+        print()
+        opcion = input("  Elige una opción: ").strip()
+        if opcion == "0":
+            return
+        if opcion == "1":
+            ok, error = cambiar_estado_cuenta(not privada)
+            if ok:
+                print(VERDE + NEGRITA + (f"\n  ✅ Tu cuenta ahora es privada. Nadie más verá tus datos."
+                                          if not privada else
+                                          "\n  ✅ Tu cuenta ahora es pública. Todos podrán ver tus datos.") + RESET)
+            else:
+                print(ROJO + f"\n  ⚠ {error}" + RESET)
+            pausa()
+        elif opcion == "2":
+            limpiar_pantalla()
+            titulo()
+            print()
+            print(MORADO + NEGRITA + "  👀 LO QUE VEN LOS DEMÁS" + RESET)
+            separador()
+            privada_actual = es_privado(NOMBRE_JUGADOR)
+            if privada_actual:
+                print("\n  🔒 Tu cuenta es privada. Los demás NO verán:")
+                print("     • Tu nombre en 'Jugadores registrados'")
+                print("     • Tu puesto en el 'Ranking general'")
+                print("     • Tus aciertos en la semana/mes/año")
+            else:
+                print("\n  🌐 Tu cuenta es pública. Todo el mundo ve tus datos.")
+            separador()
+            pausa()
+        else:
+            print("  ⚠ Opción inválida, intenta de nuevo.")
+
+
 def hash_contraseña(nombre, clave):
     d = hashlib.sha256()
     d.update(nombre.encode())
@@ -1118,6 +1239,9 @@ def main():
             continue
         if opcion == "5":
             ver_records()
+            continue
+        if opcion == "6":
+            menu_cuenta()
             continue
         if opcion == "2":
             tema = elegir_categoria()

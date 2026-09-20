@@ -2,9 +2,11 @@ __pycache__/
 *.pyc
 servidor_datos/
 usuarios.json
+privados.json
 rankings.json
 resultados.json
 preguntas_personales.json
 .trivia_records.txt
 .historial.json
 servidor_config.txt
+servidor.log
