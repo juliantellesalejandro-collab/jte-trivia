@@ -1003,7 +1003,7 @@ def pedir_nombre():
         if not existe:
             if en_linea:
                 while True:
-                    clave = leer_contraseña("  Define tu contraseña: ")
+                    clave = input("  Define tu contraseña (se ve al escribir): ")
                     if not clave:
                         print("  ⚠ La contraseña no puede estar vacía.")
                         continue
@@ -1021,7 +1021,7 @@ def pedir_nombre():
                 break
             usuarios = cargar_usuarios()
             while True:
-                clave = leer_contraseña("  Define tu contraseña: ")
+                clave = input("  Define tu contraseña (se ve al escribir): ")
                 if not clave:
                     print("  ⚠ La contraseña no puede estar vacía.")
                     continue
