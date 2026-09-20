@@ -188,6 +188,8 @@ class Manejador(BaseHTTPRequestHandler):
                 total = int(cuerpo.get("total", 1))
             except ValueError:
                 return self.respuesta(400, {"ok": False, "error": "datos inválidos"})
+            if total < 1 or aciertos < 0 or aciertos > total:
+                return self.respuesta(400, {"ok": False, "error": "resultado no válido"})
             info = registrar_resultado(nombre, aciertos, total)
             return self.respuesta(200, {"ok": True, **info})
 

@@ -353,7 +353,6 @@ def jugar(banco, categoria):
         registrar_resultado(aciertos, total)
         cambio = actualizar_ranking(NOMBRE_JUGADOR, aciertos, total)
 
-    cambio = actualizar_ranking(NOMBRE_JUGADOR, aciertos, total)
     print()
     print(MORADO + NEGRITA + "  🏆 TU RANKING" + RESET)
     if cambio["delta"] >= 0:
@@ -734,14 +733,15 @@ def ver_records():
     else:
         with open(RECORDS) as f:
             lineas = [l.strip() for l in f if l.strip()]
-        if not lineas:
+        propios = [l for l in lineas if l.startswith(NOMBRE_JUGADOR + "|")]
+        if not propios:
             print("\n  Todavía no tienes récords. ¡Juega una partida!")
         else:
             print()
-            for i, linea in enumerate(lineas[-10:], 1):
+            for i, linea in enumerate(propios[-10:], 1):
                 partes = linea.split("|")
                 if len(partes) == 3:
-                    print(f"  {i}.  🎮 {partes[0]}  |  ✅ {partes[1]}  |  🗂 {partes[2]}")
+                    print(f"  {i}.  ✅ {partes[1]}  |  🗂 {partes[2]}")
     separador()
     pausa()
 
@@ -961,10 +961,13 @@ def estadisticas_jugador(nombre):
             for linea in f:
                 partes = linea.strip().split("|")
                 if len(partes) == 3 and partes[0] == nombre:
+                    try:
+                        a, t = partes[1].split("/")
+                        aciertos += int(a)
+                        total_preg += int(t)
+                    except (ValueError, IndexError):
+                        continue
                     partidas += 1
-                    a, t = partes[1].split("/")
-                    aciertos += int(a)
-                    total_preg += int(t)
     if partidas == 0:
         return None
     return {"partidas": partidas, "aciertos": aciertos, "total": total_preg}
