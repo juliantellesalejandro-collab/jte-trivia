@@ -23,8 +23,8 @@ El proyecto es 100% portable: solo usa la biblioteca estándar de Python 3, no i
 Detecta tu distro, instala `python3` si falta, copia los archivos a `~/juegos` y deja el comando `trivia` listo:
 
 ```bash
-git clone https://github.com/juliantellesalejandro-collab/jte-trivia.git
-cd jte-trivia
+git clone https://github.com/juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal.git
+cd trivia-para-jugar-en-la-terminal
 ./instalar.sh
 ```
 
@@ -35,27 +35,27 @@ Al terminar, abre una terminal nueva y escribe `trivia`.
 ```bash
 # Debian / Ubuntu / Mint
 sudo apt-get install -y python3
-cd jte-trivia
+cd trivia-para-jugar-en-la-terminal
 python3 trivia.py
 
 # Fedora / RHEL / Rocky
 sudo dnf install -y python3
-cd jte-trivia
+cd trivia-para-jugar-en-la-terminal
 python3 trivia.py
 
 # Arch / Manjaro
 sudo pacman -S python
-cd jte-trivia
+cd trivia-para-jugar-en-la-terminal
 python3 trivia.py
 
 # openSUSE
 sudo zypper install python3
-cd jte-trivia
+cd trivia-para-jugar-en-la-terminal
 python3 trivia.py
 
 # Alpine
 sudo apk add python3
-cd jte-trivia
+cd trivia-para-jugar-en-la-terminal
 python3 trivia.py
 ```
 
@@ -75,8 +75,8 @@ Para el modo online: `set TRIVIA_SERVIDOR=http://IP_DEL_SERVIDOR:8090` y despué
 ### Sin git (solo descargar el zip)
 
 ```bash
-curl -L -o jte-trivia.zip https://github.com/juliantellesalejandro-collab/jte-trivia/archive/refs/heads/main.zip
-unzip jte-trivia.zip && cd jte-trivia-main
+curl -L -o trivia-terminal.zip https://github.com/juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal/archive/refs/heads/main.zip
+unzip trivia-terminal.zip && cd trivia-para-jugar-en-la-terminal-main
 python3 trivia.py
 ```
 
