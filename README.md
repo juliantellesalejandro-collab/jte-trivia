@@ -55,6 +55,19 @@ cd jte-trivia
 python3 trivia.py
 ```
 
+### Windows
+
+El juego funciona también en Windows (10/11), con terminal normal, PowerShell o el símbolo del sistema:
+
+1. Instala Python desde https://www.python.org/downloads/ (marca "Add Python to PATH").
+2. Abre una terminal en la carpeta del proyecto y ejecuta:
+
+```powershell
+python trivia.py
+```
+
+Para el modo online: `set TRIVIA_SERVIDOR=http://IP_DEL_SERVIDOR:8090` y después `python trivia.py`.
+
 ### Sin git (solo descargar el zip)
 
 ```bash

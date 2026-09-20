@@ -4,11 +4,16 @@ import json
 import os
 import random
 import sys
-import termios
-import tty
 import urllib.parse
 import urllib.request
 from datetime import date, timedelta
+
+ES_WINDOWS = sys.platform == "win32"
+if ES_WINDOWS:
+    import msvcrt
+else:
+    import termios
+    import tty
 
 NOMBRE_JUGADOR = ""
 
@@ -388,6 +393,20 @@ def guardar_historial(banco):
 
 
 def leer_tecla():
+    if ES_WINDOWS:
+        primero = msvcrt.getwch()
+        if primero in ("\x00", "\xe0"):
+            segundo = msvcrt.getwch()
+            if segundo in ("H", "K"):
+                return "ARRIBA"
+            if segundo in ("P", "M"):
+                return "ABAJO"
+            return None
+        if primero in ("\r", "\n"):
+            return "ENTER"
+        if primero == "\x03":
+            raise KeyboardInterrupt
+        return None
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     try:
@@ -897,6 +916,31 @@ def hash_contraseña(nombre, clave):
 def leer_contraseña(prompt):
     if not sys.stdin.isatty():
         return input(prompt).strip()
+    if ES_WINDOWS:
+        sys.stdout.write(prompt)
+        sys.stdout.flush()
+        partes = []
+        while True:
+            tecla = msvcrt.getwch()
+            if tecla in ("\r", "\n"):
+                sys.stdout.write("\n")
+                break
+            if tecla in ("\x00", "\xe0"):
+                msvcrt.getwch()
+                continue
+            if tecla in ("\x03", "\x1a"):
+                raise KeyboardInterrupt
+            if tecla == "\b":
+                if partes:
+                    partes.pop()
+                    sys.stdout.write("\b \b")
+                continue
+            if not tecla.isprintable():
+                continue
+            partes.append(tecla)
+            sys.stdout.write("*")
+        sys.stdout.flush()
+        return "".join(partes).strip()
     fd = sys.stdin.fileno()
     viejo = termios.tcgetattr(fd)
     try:
