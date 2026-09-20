@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ─────────────────────────────────────────────────────────────
-#  JTE TRIVIA  ·  juego de preguntas en español
+#  TRIVIA PARA JUGAR EN TERMINAL  ·  juego de preguntas en español
 #  © juliantelles · 2026 · todos los derechos reservados
 #  Hecho a mano, con 🧠. No uses este código sin permiso.
 #  ─────────────────────────────────────────────────────────────
@@ -249,9 +249,12 @@ def separador():
 
 def titulo():
     letras = [
-        ["██████", "    ██", "    ██", "██  ██", " ████ "],
         ["██████", "  ██  ", "  ██  ", "  ██  ", "  ██  "],
-        ["██████", "██    ", "██████", "██    ", "██████"],
+        ["██████", "██  ██", "██████", "██ ██ ", "██  ██"],
+        ["██████", "  ██  ", "  ██  ", "  ██  ", "██████"],
+        ["██  ██", "██  ██", "██  ██", " ████ ", "  ██  "],
+        ["██████", "  ██  ", "  ██  ", "  ██  ", "██████"],
+        [" ████ ", "██  ██", "██████", "██  ██", "██  ██"],
     ]
     colores = [CIAN, AZUL, MORADO]
     ancho = 50
@@ -263,11 +266,12 @@ def titulo():
 
     print(AZUL + "+" + "-" * ancho + "+" + RESET)
     for r in range(5):
-        piezas = [colores[i] + letras[i][r] + RESET for i in range(3)]
-        fila("   " + "  ".join(piezas), 3 + 25)
+        piezas = [colores[i % 3] + letras[i][r] + RESET for i in range(6)]
+        fila("  " + "  ".join(piezas), 2 + 46)
     fila()
-    tagline = MORADO + NEGRITA + "✦ JTE TRIVIA ✦" + RESET + CIAN + "  Gran juego de preguntas" + RESET
-    fila("   " + tagline, 3 + 14 + 27)
+    tagline = NEGRITA + "✦ TRIVIA PARA JUGAR EN TERMINAL ✦" + RESET
+    fila("   " + CIAN + tagline + RESET, 3 + 34)
+    fila(CIAN + "   🎮 Gran juego de preguntas en español" + RESET, 3 + 36)
     print(AZUL + "+" + "-" * ancho + "+" + RESET)
     print(CIAN + "   ✦ Hecho por juliantelles • 2026 · v" + VERSION + " ✦" + RESET)
 
@@ -1462,7 +1466,7 @@ def pedir_nombre():
     print()
     en_linea = servidor_online()
     if en_linea:
-        print(CIAN + "  🌐 Conectado al servidor JTE TRIVIA (modo online)." + RESET)
+        print(CIAN + "  🌐 Conectado al servidor de Trivia (modo online)." + RESET)
         print("  Los nombres, récords y rankings se comparten con todos los jugadores.\n")
     else:
         print(CIAN + "  🔐 Modo local (servidor no encontrado)." + RESET)

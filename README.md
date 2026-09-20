@@ -1,4 +1,4 @@
-# 🏆 JTE Trivia
+# 🏆 Trivia para jugar en terminal
 
 Juego de preguntas y respuestas en español para terminal, con modo **online** en red local, récords personales y clasificación tipo Elo.
 
