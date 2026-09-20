@@ -4,10 +4,14 @@ Juego de preguntas y respuestas en español para terminal, con modo **online** e
 
 ## Características
 
-- **120 preguntas** repartidas en 6 categorías y 20 preguntas personalizadas.
+- **180 preguntas** repartidas en 6 categorías y preguntas personalizadas.
 - **Registro de jugadores con contraseña** (hash SHA-256), sin dependencias externas: solo stdlib de Python 3.
+- **Cuenta privada**: oculta tu nombre, ranking y aciertos a los demás jugadores (local y servidor).
 - **Ranking Elo**: rating inicial 1200, con rangos 👑 Maestro, 💎 Diamante, 🥇 Oro, 🥈 Plata y 🥉 Bronce, además de rachas 🔥.
 - **Mejores de la semana / mes / año**.
+- **Modo contrarreloj**: 10 segundos por pregunta con bonus por rapidez.
+- **Desafío diario**: 10 preguntas fijas al día, una sola oportunidad, cuenta para el rating.
+- **Logros**: 8 insignias desbloqueables automáticamente.
 - **Modo servidor central**: varias máquinas comparten nombres, récords y tablas a través de la red local; si no hay servidor, todo funciona en modo local automáticamente.
 
 ## Instalación
@@ -97,6 +101,6 @@ Si el servidor no responde en ~3 segundos, el juego pasa a modo local sin romper
 
 ## Archivos de datos
 
-- En modo local se guardan junto a `trivia.py`: `usuarios.json`, `privados.json`, `rankings.json`, `resultados.json`, `.trivia_records.txt`, `.historial.json`.
+- En modo local se guardan junto a `trivia.py`: `usuarios.json`, `privados.json`, `rankings.json`, `resultados.json`, `.trivia_records.txt`, `.historial.json`, `desafios.json`, `logros.json`.
 - El servidor guarda su copia en `servidor_datos/`.
 - Todos estos archivos y la config de red están en `.gitignore`.

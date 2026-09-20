@@ -10,6 +10,7 @@ import json
 import os
 import random
 import sys
+import time
 import urllib.parse
 import urllib.request
 from datetime import date, timedelta
@@ -22,7 +23,10 @@ else:
     import tty
 
 NOMBRE_JUGADOR = ""
-VERSION = "1.2"
+NOMBRE_JUGADOR = ""
+VERSION = "1.3"
+TIEMPO_RELOJ = 10
+ULTIMA_PARTIDA = None
 
 PREGUNTAS = {
     "Ciencia": [
@@ -46,6 +50,16 @@ PREGUNTAS = {
         ("¿Cuál es el metal más ligero que existe?", ["El litio", "El hierro", "El aluminio", "El cobre"], 0),
         ("¿Cuántas veces al año gira la Tierra alrededor del Sol?", ["1", "2", "12", "365"], 0),
         ("¿Cuál es la unidad básica de la vida?", ["La célula", "El átomo", "El tejido", "El órgano"], 0),
+        ("¿Cuál es el elemento más abundante en el universo?", ["Helio", "Hidrógeno", "Oxígeno", "Carbono"], 1),
+        ("¿Quién formuló las tres leyes del movimiento?", ["Albert Einstein", "Galileo Galilei", "Isaac Newton", "Nikola Tesla"], 2),
+        ("¿Qué fuerza atrae los objetos hacia la Tierra?", ["La inercia", "La gravedad", "El magnetismo", "La fricción"], 1),
+        ("¿Qué tipo de animal es la ballena?", ["Un pez", "Un anfibio", "Un reptil", "Un mamífero"], 3),
+        ("¿Cuál es el planeta más cercano al Sol?", ["Venus", "Marte", "Mercurio", "La Tierra"], 2),
+        ("¿Cuántos dientes tiene un adulto promedio?", ["32", "28", "30", "34"], 0),
+        ("¿Qué hueso protege el cerebro?", ["La columna", "El cráneo", "Las costillas", "La pelvis"], 1),
+        ("¿Qué gas usan las plantas en la fotosíntesis?", ["Oxígeno", "Nitrógeno", "Hidrógeno", "Dióxido de carbono"], 3),
+        ("¿En qué unidad se mide la frecuencia?", ["El vatio", "El hercio", "El julio", "El voltio"], 1),
+        ("¿Qué parte del ojo enfoca la luz?", ["La retina", "El cristalino", "La pupila", "El iris"], 1),
     ],
     "Historia": [
         ("¿En qué año llegó Cristóbal Colón a América?", ["1492", "1521", "1488", "1519"], 0),
@@ -68,6 +82,16 @@ PREGUNTAS = {
         ("¿Qué pueblo construyó las pirámides de Giza?", ["Los egipcios", "Los mayas", "Los aztecas", "Los sumerios"], 0),
         ("¿Quién fue rey de Francia conocido como 'el Rey Sol'?", ["Luis XIV", "Napoleón Bonaparte", "Luis XVI", "Carlos IX"], 0),
         ("¿En qué año se disolvió la Unión Soviética?", ["1991", "1989", "1985", "2000"], 0),
+        ("¿Quién fue el primer presidente de México?", ["Guadalupe Victoria", "Benito Juárez", "Porfirio Díaz", "Vicente Guerrero"], 0),
+        ("¿En qué año llegó Hernán Cortés a territorio mexicano?", ["1492", "1519", "1521", "1494"], 1),
+        ("¿Qué civilización construyó las pirámides de Teotihuacán?", ["Los mexicas", "Los olmecas", "Los teotihuacanos", "Los mayas"], 2),
+        ("¿En qué año se consumó la Independencia de México?", ["1810", "1821", "1824", "1848"], 1),
+        ("¿Quién escribió 'El llano en llamas'?", ["Juan Rulfo", "Octavio Paz", "Carlos Fuentes", "Elena Poniatowska"], 0),
+        ("¿Qué faraona gobernó el Antiguo Egipto?", ["Hatshepsut", "Cleopatra", "Nefertiti", "Isis"], 0),
+        ("¿En qué año comenzó la Revolución Francesa?", ["1776", "1789", "1812", "1848"], 1),
+        ("¿Qué emperador romano mandó construir el Coliseo?", ["Augusto", "Nerón", "Vespasiano", "Trajano"], 2),
+        ("¿Qué país invadió la Unión Soviética en 1941?", ["Alemania", "Italia", "Japón", "Turquía"], 0),
+        ("¿Quién fue el primer humano en pisar la Luna?", ["Buzz Aldrin", "Michael Collins", "Yuri Gagarin", "Neil Armstrong"], 3),
     ],
     "Geografía": [
         ("¿Cuál es el río más largo del mundo?", ["El Amazonas", "El Nilo", "El Yangtsé", "El Misisipi"], 0),
@@ -90,6 +114,16 @@ PREGUNTAS = {
         ("¿Qué río atraviesa la ciudad de El Cairo?", ["El Nilo", "El Éufrates", "El Jordán", "El Tigris"], 0),
         ("¿Cuál es el continente más seco del planeta?", ["Antártida", "África", "Australia", "Asia"], 0),
         ("¿Qué país tiene la mayor cantidad de husos horarios?", ["Francia", "Rusia", "China", "Estados Unidos"], 0),
+        ("¿Qué país europeo ocupa la mayor superficie?", ["Francia", "Rusia", "Ucrania", "España"], 1),
+        ("¿Cuál es el lago más grande del mundo?", ["El Titicaca", "El Victoria", "El Caspio", "El Superior"], 2),
+        ("¿En qué océano se encuentra Madagascar?", ["El Atlántico", "El Pacífico", "El Índico", "El Ártico"], 2),
+        ("¿Cuál es la capital de Argentina?", ["Buenos Aires", "Córdoba", "Rosario", "Mendoza"], 0),
+        ("¿Qué desierto cubre el sur de Mongolia y el norte de China?", ["El Gobi", "El Sahara", "El de Atacama", "El de Arabia"], 0),
+        ("¿Cuál es el río más caudaloso del mundo?", ["El Nilo", "El Amazonas", "El Misisipi", "El Yangtsé"], 1),
+        ("¿En qué continente está Brasil?", ["África", "Asia", "Europa", "América"], 3),
+        ("¿Cuál es la capital de Egipto?", ["Alejandría", "El Cairo", "Luxor", "Giza"], 1),
+        ("¿Qué país europeo tiene forma de bota?", ["Italia", "Portugal", "Grecia", "Croacia"], 0),
+        ("¿Cuál es el volcán activo más alto del mundo?", ["El Ojos del Salado", "El Teide", "El Popocatépetl", "El Cotopaxi"], 0),
     ],
     "Arte y Cultura": [
         ("¿Quién pintó la Mona Lisa?", ["Miguel Ángel", "Rafael", "Leonardo da Vinci", "Caravaggio"], 2),
@@ -112,6 +146,16 @@ PREGUNTAS = {
         ("¿Quién escribió 'La Odisea'?", ["Homero", "Sófocles", "Platón", "Esopo"], 0),
         ("¿Qué lugar famoso se encuentra en Londres?", ["El Big Ben", "La Torre Eiffel", "El Coliseo", "La Estatua de la Libertad"], 0),
         ("¿Qué artista pintó el techo de la Capilla Sixtina?", ["Miguel Ángel", "Leonardo da Vinci", "Rafael", "Donatello"], 0),
+        ("¿Quién pintó 'La última cena'?", ["Miguel Ángel", "Leonardo da Vinci", "Rafael", "Botticelli"], 1),
+        ("¿En qué país nació el compositor Mozart?", ["Italia", "Francia", "Austria", "Alemania"], 2),
+        ("¿Qué escritor mexicano ganó el Premio Nobel de Literatura?", ["Octavio Paz", "Juan Rulfo", "Carlos Fuentes", "Alfonso Reyes"], 0),
+        ("¿Quién esculpió 'El Pensador'?", ["Miguel Ángel", "Auguste Rodin", "Donatello", "Bernini"], 1),
+        ("¿Qué género musical mexicano se interpreta con guitarrón y trompetas?", ["El mariachi", "La banda", "El son", "El bolero"], 0),
+        ("¿Quién escribió 'Rayuela'?", ["Julio Cortázar", "Mario Vargas Llosa", "Gabriel García Márquez", "Vicente Huidobro"], 0),
+        ("¿Qué pintor es famoso por sus autorretratos con la oreja vendada?", ["Vincent van Gogh", "Paul Gauguin", "Paul Cézanne", "Rembrandt"], 0),
+        ("¿Qué instrumento de cuerda tiene 47 cuerdas?", ["El arpa", "La guitarra", "El violín", "El contrabajo"], 0),
+        ("¿Qué película dirigió Steven Spielberg?", ["Avatar", "Titanic", "Parque Jurásico", "Interstellar"], 2),
+        ("¿En qué museo se exhibe 'La Gioconda'?", ["El Prado", "Los Uffizi", "El Louvre", "El British"], 2),
     ],
     "Deportes": [
         ("¿Cuántos jugadores tiene un equipo de fútbol en la cancha?", ["9", "10", "11", "12"], 2),
@@ -134,6 +178,16 @@ PREGUNTAS = {
         ("¿En qué juego se usan fichas llamadas torres, alfiles y caballos?", ["El ajedrez", "Las damas", "El go", "El backgammon"], 0),
         ("¿Qué país organizó los Juegos Olímpicos de 2008?", ["China", "Japón", "Reino Unido", "Corea del Sur"], 0),
         ("¿Qué deporte se practica en Wimbledon?", ["El tenis", "El críquet", "El golf", "El polo"], 0),
+        ("¿Qué selección ganó el Mundial de fútbol de 1986?", ["Brasil", "Italia", "Alemania", "Argentina"], 3),
+        ("¿Cuántas jugadoras juegan por equipo en un partido de vóley?", ["Tres", "Dos", "Seis", "Cinco"], 2),
+        ("¿En qué país se inventó el baloncesto?", ["Estados Unidos", "Canadá", "Reino Unido", "España"], 0),
+        ("¿Cuántos jugadores disputan por equipo un partido de balonmano?", ["7", "6", "5", "9"], 0),
+        ("¿Qué tenista ganó 20 títulos de Grand Slam en individuales?", ["Roger Federer", "Rafael Nadal", "Novak Djokovic", "Andy Murray"], 0),
+        ("¿Cuál es el deporte nacional de Japón?", ["El kendo", "El sumo", "El judo", "El karate"], 1),
+        ("¿En qué país se celebra el Tour de Francia?", ["España", "Italia", "Francia", "Bélgica"], 2),
+        ("¿Qué boxeador mexicano se conoce como 'El Cañón'?", ["Julio César Chávez", "Jorge Arce", "Canelo Álvarez", "Rubén Olivares"], 0),
+        ("¿Cuántos jugadores forman un equipo de béisbol en el campo?", ["9", "10", "8", "11"], 0),
+        ("¿Qué atleta jamaicano batió récords en los 100 metros?", ["Usain Bolt", "Yohan Blake", "Asafa Powell", "Michael Johnson"], 0),
     ],
     "Tecnología": [
         ("¿Qué significa CPU?", ["Unidad Central de Proceso", "Unidad de Cómputo Personal", "Circuito de Procesamiento Universal", "Unidad de Control de Programas"], 0),
@@ -156,6 +210,16 @@ PREGUNTAS = {
         ("¿Qué red conecta dispositivos sin cables a corta distancia?", ["El Bluetooth", "El GPS", "El láser", "El NFC"], 0),
         ("¿Cuál es el buscador más usado del mundo?", ["Google", "Bing", "DuckDuckGo", "Yahoo"], 0),
         ("¿Cuál es el sistema operativo de Apple para sus computadoras?", ["macOS", "iOS", "Linux", "Windows"], 0),
+        ("¿En qué año se lanzó la primera versión pública de Windows?", ["1985", "1990", "1981", "1995"], 0),
+        ("¿Qué significa HTTP?", ["Protocolo de transferencia de hipertexto", "Sistema de transmisión de páginas", "Lenguaje de marcado web", "Red de hipertexto común"], 0),
+        ("¿Qué empresa fabrica los procesadores Ryzen?", ["Intel", "AMD", "Qualcomm", "NVIDIA"], 1),
+        ("¿Qué conector usan los cargadores de teléfonos modernos?", ["USB Type-C", "Micro-USB", "Lightning", "USB-B"], 0),
+        ("¿Qué lenguaje de programación usa la extensión .js?", ["Python", "JavaScript", "Java", "Ruby"], 1),
+        ("¿Cómo se llama el servicio de nube de Apple?", ["iCloud", "Google Drive", "OneDrive", "Dropbox"], 0),
+        ("¿Qué personas crearon WhatsApp?", ["Mark Zuckerberg", "Larry Page", "Jack Dorsey", "Brian Acton y Jan Koum"], 3),
+        ("¿Qué chip de 8 bits fue famoso en los ordenadores de los 80?", ["El 6502", "El Pentium", "El Core i7", "El Snapdragon"], 0),
+        ("¿Qué significa SSD?", ["Unidad de estado sólido", "Disco de estado sólido", "Sistema de datos sólido", "Almacenamiento sólido digital"], 0),
+        ("¿Qué red social fundó Jack Dorsey?", ["Instagram", "Facebook", "Twitter", "LinkedIn"], 2),
     ],
 }
 
@@ -218,13 +282,103 @@ def menu_principal():
     print("  [4] 🏆 Clasificación (Ranked)")
     print("  [5] 📊 Ver mis récords")
     print("  [6] 🔒 Cuenta privada")
+    print("  [7] 🎲 Desafío diario")
+    print("  [8] 🏅 Mis logros")
     print("  [0] Salir")
 
     while True:
         opcion = input("  Elige una opción: ").strip()
-        if opcion in ("1", "2", "3", "4", "5", "6", "0"):
+        if opcion in ("1", "2", "3", "4", "5", "6", "7", "8", "0"):
             return opcion
         print("  ⚠ Opción inválida, intenta de nuevo.")
+
+
+def elegir_modo():
+    limpiar_pantalla()
+    titulo()
+    print()
+    print(MORADO + NEGRITA + "  ⚡ MODO DE JUEGO" + RESET + "\n")
+    print("  [1] 🐢 Normal (sin tiempo)")
+    print(f"  [2] ⏱ Contrarreloj ({TIEMPO_RELOJ} s por pregunta)")
+    print()
+    while True:
+        opcion = input("  Elige una opción: ").strip()
+        if opcion == "1":
+            return "normal"
+        if opcion == "2":
+            return "reloj"
+        print("  ⚠ Opción inválida, intenta de nuevo.")
+
+
+def input_con_tiempo(prompt, segundos):
+    if not sys.stdin.isatty():
+        return input(prompt + " ").strip().upper()
+    sys.stdout.write(prompt + "  ⏱ " + AMARILLO + f"[{segundos}s]{RESET} ")
+    sys.stdout.flush()
+    inicio = time.monotonic()
+    resto = segundos
+    respuesta = ""
+    fd = sys.stdin.fileno()
+
+    if ES_WINDOWS:
+        respuesta = ""
+        while time.monotonic() - inicio < segundos:
+            if msvcrt.kbhit():
+                tecla = msvcrt.getwch()
+                if tecla in ("\r", "\n"):
+                    sys.stdout.write("\n")
+                    sys.stdout.flush()
+                    return respuesta.strip().upper()
+                if tecla in ("\x00", "\xe0"):
+                    msvcrt.getwch()
+                    continue
+                if tecla == "\b":
+                    if respuesta:
+                        respuesta = respuesta[:-1]
+                        sys.stdout.write("\b \b")
+                    continue
+                respuesta += tecla
+                sys.stdout.write(tecla)
+            restante = segundos - int(time.monotonic() - inicio)
+            if restante != resto:
+                resto = restante
+                sys.stdout.write("\r\033[K" + prompt + "  ⏱ " + AMARILLO +
+                                 f"[{resto}s]{RESET} " + respuesta)
+            sys.stdout.flush()
+        sys.stdout.write("\r\033[K" + prompt + "  ⏱ " + ROJO + "[tiempo agotado]" + RESET + "\n")
+        return ""
+    try:
+        viejo = termios.tcgetattr(fd)
+        tty.setcbreak(fd)
+        import select
+        while time.monotonic() - inicio < segundos:
+            restante = segundos - int(time.monotonic() - inicio)
+            if restante != resto:
+                resto = restante
+                sys.stdout.write("\r\033[K" + prompt + "  ⏱ " + AMARILLO +
+                                 f"[{resto}s]{RESET} " + respuesta)
+                sys.stdout.flush()
+            listo, _, _ = select.select([fd], [], [], 0.1)
+            if not listo:
+                continue
+            tecla = os.read(fd, 1).decode(errors="replace")
+            if tecla in ("\r", "\n"):
+                sys.stdout.write("\r\033[K\n")
+                sys.stdout.flush()
+                return respuesta.strip().upper()
+            if tecla == "\x7f":
+                if respuesta:
+                    respuesta = respuesta[:-1]
+                    sys.stdout.write("\b \b")
+                continue
+            respuesta += tecla
+            sys.stdout.write(tecla)
+            sys.stdout.flush()
+        sys.stdout.write("\r\033[K" + prompt + "  ⏱ " + ROJO + "[tiempo agotado]" + RESET + "\n")
+        return ""
+    finally:
+        sys.stdout.write("\r\033[K")
+        termios.tcsetattr(fd, termios.TCSADRAIN, viejo)
 
 
 def elegir_categoria():
@@ -281,14 +435,18 @@ def preparar_banco(categoria):
     return banco[:10] if len(banco) > 10 else banco
 
 
-def jugar(banco, categoria):
+def jugar(banco, categoria, modo="normal", repetir=True):
+    global ULTIMA_PARTIDA
+    ULTIMA_PARTIDA = None
     limpiar_pantalla()
     titulo()
     print()
     total = len(banco)
     aciertos = 0
+    tiempos = []
     print(CIAN + NEGRITA + f"  {'CATEGORÍA MIXTA' if categoria is None else 'CATEGORÍA: ' + categoria.upper()}" + RESET)
-    print(f"  {AMARILLO}{total}{RESET} preguntas | Jugador: {NOMBRE_JUGADOR}\n")
+    print(f"  {AMARILLO}{total}{RESET} preguntas | Jugador: {NOMBRE_JUGADOR}"
+          + (f" | ⏱ Contrarreloj ({TIEMPO_RELOJ}s)" if modo == "reloj" else "") + "\n")
     input("  Pulsa ENTER para empezar...")
 
     for i, (pregunta, opciones, correcta) in enumerate(banco, 1):
@@ -303,22 +461,36 @@ def jugar(banco, categoria):
             print(f"    {LETRAS[j]}) {opcion}")
 
         print()
-        while True:
-            respuesta = input("  Tu respuesta (A/B/C/D o S para salir): ").strip().upper()
+        if modo == "reloj":
+            t0 = time.monotonic()
+            respuesta = input_con_tiempo("  Tu respuesta (A/B/C/D o S): ", TIEMPO_RELOJ)
+            tiempos.append(time.monotonic() - t0)
             if respuesta == "S":
                 print("\n  Partida abandonada. ¡Nos vemos!\n")
                 return False
-            if respuesta in LETRAS:
-                break
-            print("  ⚠ Escribe una letra válida (A, B, C o D).")
-
-        letra_correcta = LETRAS[correcta]
-        if respuesta == letra_correcta:
-            print(VERDE + NEGRITA + "\n  ✅ ¡Correcto! Muy bien." + RESET)
-            aciertos += 1
+            if respuesta not in LETRAS:
+                print(ROJO + "\n  ⏱ ¡Tiempo agotado! Esta pregunta no cuenta." + RESET)
+                respuesta = ""
         else:
-            print(ROJO + NEGRITA + "\n  ❌ Incorrecto." + RESET +
-                  f" La respuesta era {letra_correcta}) {opciones[correcta]}")
+            while True:
+                respuesta = input("  Tu respuesta (A/B/C/D o S para salir): ").strip().upper()
+                if respuesta == "S":
+                    print("\n  Partida abandonada. ¡Nos vemos!\n")
+                    return False
+                if respuesta in LETRAS:
+                    break
+                print("  ⚠ Escribe una letra válida (A, B, C o D).")
+
+        if respuesta in LETRAS:
+            letra_correcta = LETRAS[correcta]
+            if respuesta == letra_correcta:
+                print(VERDE + NEGRITA + "\n  ✅ ¡Correcto! Muy bien." + RESET)
+                aciertos += 1
+            else:
+                print(ROJO + NEGRITA + "\n  ❌ Incorrecto." + RESET +
+                      f" La respuesta era {letra_correcta}) {opciones[correcta]}")
+        else:
+            print(ROJO + "\n  ⏱ Sin respuesta: fallo." + RESET)
 
         pausa()
 
@@ -345,6 +517,17 @@ def jugar(banco, categoria):
     print(NEGRITA + f"  {mensaje}" + RESET)
     separador()
 
+    if modo == "reloj" and tiempos:
+        total_t = sum(tiempos)
+        bonus = 0
+        for t in tiempos:
+            bonus += max(0, TIEMPO_RELOJ - round(t))
+        rapida = min(tiempos)
+        print(f"  ⏱ Tiempo total: {total_t:.1f}s  |  Respuesta más rápida: {rapida:.1f}s")
+        print(f"  ⚡ Bonus por rapidez: {VERDE}+{bonus}{RESET} puntos (no afecta el ranking)")
+        separador()
+
+    ULTIMA_PARTIDA = {"aciertos": aciertos, "total": total}
     guardar_record(aciertos, total, categoria)
     guardar_historial(banco)
 
@@ -375,7 +558,14 @@ def jugar(banco, categoria):
         print(AMARILLO + "  🥇 ¡ERES EL NÚMERO UNO!" + RESET)
     separador()
 
-    return jugar_otra_vez()
+    nuevos = verificar_logros(resultado=ULTIMA_PARTIDA, modo=modo)
+    if nuevos:
+        print(AMARILLO + "  🏅 ¡Logros desbloqueados: " + ", ".join(nuevos) + "!" + RESET)
+        pausa()
+
+    if repetir:
+        return jugar_otra_vez()
+    return False
 
 
 def cargar_historial():
@@ -1034,6 +1224,169 @@ def menu_cuenta():
             print("  ⚠ Opción inválida, intenta de nuevo.")
 
 
+DESAFIOS = os.path.join(BASE_DIR, "desafios.json")
+
+
+def cargar_desafios():
+    if not os.path.exists(DESAFIOS):
+        return {}
+    try:
+        with open(DESAFIOS, encoding="utf-8") as f:
+            datos = json.load(f)
+        return datos if isinstance(datos, dict) else {}
+    except (ValueError, OSError):
+        return {}
+
+
+def guardar_desafios(datos):
+    try:
+        with open(DESAFIOS, "w", encoding="utf-8") as f:
+            json.dump(datos, f, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
+
+
+def banco_del_dia():
+    todas = [(p, o, c) for cat in PREGUNTAS.values() for (p, o, c) in cat]
+    rng = random.Random(date.today().toordinal())
+    return rng.sample(todas, 10)
+
+
+def menu_desafio():
+    limpiar_pantalla()
+    titulo()
+    print()
+    print(MORADO + NEGRITA + "  🎲 DESAFÍO DIARIO" + RESET)
+    separador()
+    hoy = date.today().isoformat()
+    datos = cargar_desafios()
+    d = datos.get(hoy, {}).get(NOMBRE_JUGADOR)
+    if d:
+        print(f"\n  Ya jugaste el desafío de hoy: ✅ {d['aciertos']}/{d['total']} aciertos.")
+        print("  🌙 Vuelve mañana por un reto nuevo.")
+    else:
+        print("\n  ¡El reto de hoy! 10 preguntas de todas las categorías.")
+        print(AMARILLO + "  ⚠ Solo una oportunidad al día y cuenta para tu rating." + RESET)
+        print()
+        confirmar = input("  ¿Empezar? (sí/no): ").strip().lower()
+        if confirmar not in ("si", "sí", "s"):
+            print("  ↩ Reto no iniciado.")
+            pausa()
+            separador()
+            return
+        banco = banco_del_dia()
+        jugar(banco, "DESAFÍO DIARIO", "normal", repetir=False)
+        if ULTIMA_PARTIDA:
+            datos = cargar_desafios()
+            por_dia = datos.setdefault(hoy, {})
+            por_dia[NOMBRE_JUGADOR] = {"aciertos": ULTIMA_PARTIDA["aciertos"],
+                                       "total": ULTIMA_PARTIDA["total"],
+                                       "hecho": True}
+            guardar_desafios(datos)
+            nuevos = verificar_logros(resultado=ULTIMA_PARTIDA, extra={"desafio"})
+            if nuevos:
+                print(AMARILLO + "  🏅 ¡Logros desbloqueados: " + ", ".join(nuevos) + "!" + RESET)
+                pausa()
+    separador()
+    pausa()
+
+
+LOGROS = os.path.join(BASE_DIR, "logros.json")
+
+LOGROS_TODO = [
+    ("primer100", "🌟 Cerebro Total", "Consigue un 100% en una partida."),
+    ("primera", "👣 Primer paso", "Termina tu primera partida."),
+    ("racha5", "🔥 Imparable", "Consigue una racha de 5 partidas seguidas."),
+    ("partidas10", "🎮 Pícaro", "Juega 10 partidas."),
+    ("partidas50", "🏆 Veterano", "Juega 50 partidas."),
+    ("aciertos100", "📚 Sabio", "Acumula 100 aciertos."),
+    ("veloz", "⚡ A toda máquina", "Saca un 100% en modo contrarreloj."),
+    ("desafio", "🌙 Madrugador", "Juega el desafío diario."),
+]
+
+
+def cargar_logros():
+    if not os.path.exists(LOGROS):
+        return {}
+    try:
+        with open(LOGROS, encoding="utf-8") as f:
+            datos = json.load(f)
+        return datos if isinstance(datos, dict) else {}
+    except (ValueError, OSError):
+        return {}
+
+
+def guardar_logros(datos):
+    try:
+        with open(LOGROS, "w", encoding="utf-8") as f:
+            json.dump(datos, f, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
+
+
+def _nombre_logro(ident):
+    for i, nombre, _ in LOGROS_TODO:
+        if i == ident:
+            return nombre
+    return ident
+
+
+def verificar_logros(resultado=None, modo="normal", extra=None):
+    estra = set(extra or [])
+    datos = cargar_logros()
+    logrados = set(datos.get(NOMBRE_JUGADOR, []))
+    stats = estadisticas_jugador(NOMBRE_JUGADOR)
+    partidas = stats["partidas"] if stats else 0
+    aciertos = stats["aciertos"] if stats else 0
+    racha = cargar_rankings().get(NOMBRE_JUGADOR, {}).get("racha", 0)
+
+    if resultado:
+        total = resultado.get("total", 0)
+        ok = resultado.get("aciertos", 0)
+        if total and ok >= total:
+            estra.add("primer100")
+            if modo == "reloj":
+                estra.add("veloz")
+        estra.add("primera")
+    if racha >= 5:
+        estra.add("racha5")
+    if partidas >= 10:
+        estra.add("partidas10")
+    if partidas >= 50:
+        estra.add("partidas50")
+    if aciertos >= 100:
+        estra.add("aciertos100")
+
+    validos = {ident for ident, _, _ in LOGROS_TODO}
+    nuevos = set(estra) & validos - logrados
+    if not nuevos:
+        return []
+    nombres = [_nombre_logro(i) for i in sorted(nuevos)]
+    datos[NOMBRE_JUGADOR] = sorted(logrados | nuevos)
+    guardar_logros(datos)
+    return nombres
+
+
+def ver_logros():
+    limpiar_pantalla()
+    titulo()
+    print()
+    print(MORADO + NEGRITA + "  🏅 MIS LOGROS" + RESET)
+    separador()
+    logrados = set(cargar_logros().get(NOMBRE_JUGADOR, []))
+    if not logrados:
+        print("\n  📭 Todavía no tienes logros. ¡Juega para desbloquear el primero!")
+    print()
+    for ident, nombre, desc in LOGROS_TODO:
+        marca = VERDE + "✅" + RESET if ident in logrados else "🔒"
+        print(f"  {marca} {nombre}")
+        print(f"     {CIAN}{desc}{RESET}")
+        print()
+    print(f"  {AMARILLO}{len(logrados)}/{len(LOGROS_TODO)}{RESET} logros desbloqueados")
+    separador()
+    pausa()
+
+
 def hash_contraseña(nombre, clave):
     d = hashlib.sha256()
     d.update(nombre.encode())
@@ -1221,6 +1574,9 @@ def pedir_nombre():
         print(CIAN + f"\n  🎉 ¡Hola de nuevo, {NOMBRE_JUGADOR}! ¿Listo para otra ronda?" + RESET)
     else:
         print(VERDE + f"\n  👋 ¡Hola, {NOMBRE_JUGADOR}! ¡Buena suerte!" + RESET)
+    nuevos = verificar_logros()
+    if nuevos:
+        print(AMARILLO + "\n  🏅 ¡Logros desbloqueados: " + ", ".join(nuevos) + "!" + RESET)
     pausa()
 
 
@@ -1243,11 +1599,18 @@ def main():
         if opcion == "6":
             menu_cuenta()
             continue
+        if opcion == "7":
+            menu_desafio()
+            continue
+        if opcion == "8":
+            ver_logros()
+            continue
         if opcion == "2":
             tema = elegir_categoria()
         else:
             tema = None
-        while jugar(preparar_banco(tema), tema):
+        modo = elegir_modo()
+        while jugar(preparar_banco(tema), tema, modo):
             pass
 
 
