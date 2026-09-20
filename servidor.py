@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ─────────────────────────────────────────────────────────────
+#  JTE TRIVIA · servidor central
+#  © juliantelles · 2026 · todos los derechos reservados
+#  No uses este código sin permiso.
+#  ─────────────────────────────────────────────────────────────
 import hashlib
 import json
 import os
@@ -206,6 +212,7 @@ def main():
     print(f"  Escuchando en 0.0.0.0:{puerto} (toda la red local)")
     print(f"  Datos en: {DATOS}")
     print("  Otros jugadores deben configurar TRIVIA_SERVIDOR=http://IP_DEL_SERVIDOR:8090")
+    print("  ✦ Hecho por juliantelles • 2026 · v1.1 ✦")
     ThreadingHTTPServer(("0.0.0.0", puerto), Manejador).serve_forever()
 
 

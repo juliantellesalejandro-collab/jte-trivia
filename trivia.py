@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ─────────────────────────────────────────────────────────────
+#  JTE TRIVIA  ·  juego de preguntas en español
+#  © juliantelles · 2026 · todos los derechos reservados
+#  Hecho a mano, con 🧠. No uses este código sin permiso.
+#  ─────────────────────────────────────────────────────────────
 import hashlib
 import json
 import os
@@ -16,6 +22,7 @@ else:
     import tty
 
 NOMBRE_JUGADOR = ""
+VERSION = "1.1"
 
 PREGUNTAS = {
     "Ciencia": [
@@ -198,6 +205,7 @@ def titulo():
     tagline = MORADO + NEGRITA + "✦ JTE TRIVIA ✦" + RESET + CIAN + "  Gran juego de preguntas" + RESET
     fila("   " + tagline, 3 + 14 + 27)
     print(AZUL + "+" + "-" * ancho + "+" + RESET)
+    print(CIAN + "   ✦ Hecho por juliantelles • 2026 · v" + VERSION + " ✦" + RESET)
 
 
 def menu_principal():
