@@ -397,17 +397,13 @@ def leer_tecla():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
     if ch == b"\x1b":
         seq = sys.stdin.buffer.read(2)
-        if seq == b"[A":
+        if seq in (b"[A", b"[D"):
             return "ARRIBA"
-        if seq == b"[B":
+        if seq in (b"[B", b"[C"):
             return "ABAJO"
         return None
     if ch in (b"\r", b"\n"):
         return "ENTER"
-    if ch in (b"w", b"W"):
-        return "ARRIBA"
-    if ch in (b"s", b"S"):
-        return "ABAJO"
     if ch == b"\x03":
         raise KeyboardInterrupt
     return None
@@ -425,6 +421,7 @@ def jugar_otra_vez():
 
     print()
     print(AMARILLO + "  🎮 ¿Quieres jugar otra partida?" + RESET)
+    print(CIAN + "  Usa las flechas  ◀ ▲ ▼ ▶  para elegir y ENTER para confirmar." + RESET)
     seleccion = 0
 
     def pintar():
