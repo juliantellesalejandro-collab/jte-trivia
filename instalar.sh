@@ -45,13 +45,14 @@ obtener_origen() {
 
     echo "  ⬇ Descargando Trivia desde GitHub..." >&2
     command -v curl >/dev/null 2>&1 || { echo "  ❌ Necesitas 'curl' para descargar." >&2; exit 1; }
-    local tmp; tmp="$(mktemp -d)"
+    local tmp cbuf; tmp="$(mktemp -d)"
+    cbuf="?cb=$(date +%s)$$"
     trap 'rm -rf "$tmp"' EXIT
-    curl -fsSL "$TRIVIA_URL" -o "$tmp/trivia.py" || {
+    curl -fsSL "$TRIVIA_URL$cbuf" -o "$tmp/trivia.py" || {
         echo "  ❌ No pude descargar trivia.py. ¿Tienes conexión a internet?" >&2
         exit 1
     }
-    curl -fsSL "$SERVIDOR_URL" -o "$tmp/servidor.py" || {
+    curl -fsSL "$SERVIDOR_URL$cbuf" -o "$tmp/servidor.py" || {
         echo "  ❌ No pude descargar servidor.py." >&2
         exit 1
     }
