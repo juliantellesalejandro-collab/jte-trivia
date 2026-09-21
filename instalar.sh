@@ -2,7 +2,8 @@
 set -e
 
 REPO="juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal"
-URL_TARBALL="https://github.com/$REPO/archive/refs/heads/main.tar.gz"
+TRIVIA_URL="https://raw.githubusercontent.com/$REPO/main/trivia.py"
+SERVIDOR_URL="https://raw.githubusercontent.com/$REPO/main/servidor.py"
 DEST="${JTE_DEST:-$HOME/juegos}"
 BIN="$HOME/.local/bin"
 
@@ -46,12 +47,19 @@ obtener_origen() {
     command -v curl >/dev/null 2>&1 || { echo "  ❌ Necesitas 'curl' para descargar." >&2; exit 1; }
     local tmp; tmp="$(mktemp -d)"
     trap 'rm -rf "$tmp"' EXIT
-    curl -fsSL "$URL_TARBALL" -o "$tmp/trivia.tar.gz" || {
-        echo "  ❌ No pude descargar. ¿Tienes conexión a internet?" >&2
+    curl -fsSL "$TRIVIA_URL" -o "$tmp/trivia.py" || {
+        echo "  ❌ No pude descargar trivia.py. ¿Tienes conexión a internet?" >&2
         exit 1
     }
-    tar -xzf "$tmp/trivia.tar.gz" -C "$tmp"
-    printf '%s' "$tmp/trivia-para-jugar-en-la-terminal-main"
+    curl -fsSL "$SERVIDOR_URL" -o "$tmp/servidor.py" || {
+        echo "  ❌ No pude descargar servidor.py." >&2
+        exit 1
+    }
+    [ -s "$tmp/trivia.py" ] || {
+        echo "  ❌ La descarga llegó vacía. Reintenta en unos segundos." >&2
+        exit 1
+    }
+    printf '%s' "$tmp"
 }
 
 main() {
