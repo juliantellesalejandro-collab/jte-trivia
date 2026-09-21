@@ -36,7 +36,11 @@ cd trivia-para-jugar-en-la-terminal
 ./instalar.sh
 ```
 
-### Opción manual — según distro
+Tanto la opción 1 como la 2 instalan `python3` automáticamente si no lo tienes; **no tienes que instalarlo tú**.
+
+### Opción manual — solo si no quieres usar el instalador
+
+El juego está hecho en Python, así que necesita `python3`. Esta opción la usas tú si prefieres descargar y ejecutar a mano sin el instalador (entonces instalas `python3` tú mismo):
 
 ```bash
 # Debian / Ubuntu / Mint
