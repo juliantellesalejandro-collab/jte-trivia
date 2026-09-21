@@ -24,7 +24,7 @@ else:
 
 NOMBRE_JUGADOR = ""
 NOMBRE_JUGADOR = ""
-VERSION = "1.3"
+VERSION = "1.4"
 TIEMPO_RELOJ = 10
 ULTIMA_PARTIDA = None
 
@@ -276,6 +276,8 @@ def menu_principal():
     limpiar_pantalla()
     titulo()
     print()
+    print(CIAN + f"  ¡Hola, {NOMBRE_JUGADOR}! ¿Qué hacemos hoy?" + RESET)
+    print()
     print("  [1] ⚡ Jugar partida rápida")
     print("  [2] 🎯 Elegir categoría")
     print("  [3] 📝 Preguntas personalizadas")
@@ -284,11 +286,12 @@ def menu_principal():
     print("  [6] 🔒 Cuenta privada")
     print("  [7] 🎲 Desafío diario")
     print("  [8] 🏅 Mis logros")
-    print("  [0] Salir")
+    print("  [9] ⚙️ Configuración")
+    print("  [0] 👋 Salir")
 
     while True:
         opcion = input("  Elige una opción: ").strip()
-        if opcion in ("1", "2", "3", "4", "5", "6", "7", "8", "0"):
+        if opcion in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"):
             return opcion
         print("  ⚠ Opción inválida, intenta de nuevo.")
 
@@ -1387,6 +1390,240 @@ def ver_logros():
     pausa()
 
 
+CONFIG = os.path.join(BASE_DIR, "config.json")
+
+
+def cargar_config():
+    global TIEMPO_RELOJ
+    TIEMPO_RELOJ = 10
+    try:
+        with open(CONFIG, encoding="utf-8") as f:
+            datos = json.load(f)
+        if isinstance(datos.get("tiempo_reloj"), int) and 3 <= datos["tiempo_reloj"] <= 30:
+            TIEMPO_RELOJ = datos["tiempo_reloj"]
+    except (ValueError, OSError, TypeError):
+        pass
+
+
+def guardar_config():
+    try:
+        with open(CONFIG, "w", encoding="utf-8") as f:
+            json.dump({"tiempo_reloj": TIEMPO_RELOJ}, f, ensure_ascii=False, indent=2)
+    except OSError:
+        pass
+
+
+def url_servidor_config():
+    try:
+        with open(ARCHIVO_SERVIDOR, encoding="utf-8") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
+def config_servidor():
+    while True:
+        limpiar_pantalla()
+        titulo()
+        print()
+        print(MORADO + NEGRITA + "  🌐 SERVIDOR ONLINE" + RESET)
+        separador()
+        actual = url_servidor()
+        print(f"\n  URL actual: {CIAN}{actual}{RESET}")
+        origen = "usuario" if os.environ.get("TRIVIA_SERVIDOR") else "archivo servidor_config.txt"
+        print(f"  (definida por: {origen})")
+        print()
+        print("  [1] ✏️  Cambiar la URL del servidor")
+        print("  [2] 📡 Probar conexión")
+        print("  [3] 🧹 Quitar URL guardada (volver a http://127.0.0.1:8090)")
+        print("  [0] ↩ Volver a configuración")
+        print()
+        opcion = input("  Elige una opción: ").strip()
+        if opcion == "0":
+            return
+        if opcion == "1":
+            print()
+            nueva = input("  URL del servidor (ej. http://192.168.1.10:8090): ").strip()
+            if nueva:
+                try:
+                    with open(ARCHIVO_SERVIDOR, "w", encoding="utf-8") as f:
+                        f.write(nueva.rstrip("/") + "\n")
+                    SERVIDOR_EN_LINEA = None
+                    print(VERDE + f"\n  ✅ URL guardada: {nueva}" + RESET)
+                except OSError:
+                    print(ROJO + "\n  ⚠ No pude guardar la URL." + RESET)
+            else:
+                print(AMARILLO + "\n  ⚠ URL vacía, no se guardó nada." + RESET)
+            pausa()
+        elif opcion == "2":
+            print()
+            print(CIAN + f"  Conectando a {url_servidor()}..." + RESET)
+            SERVIDOR_EN_LINEA = None
+            if servidor_online():
+                print(VERDE + "  ✅ ¡El servidor responde! Modo online disponible." + RESET)
+            else:
+                print(ROJO + "  ❌ No se encontró servidor en esa dirección." + RESET)
+                print(AMARILLO + "  Recuerda: el juego sigue funcionando en modo local." + RESET)
+            pausa()
+        elif opcion == "3":
+            try:
+                os.remove(ARCHIVO_SERVIDOR)
+                print(VERDE + "\n  ✅ URL guardada eliminada." + RESET)
+            except OSError:
+                print(AMARILLO + "\n  ℹ No había URL guardada." + RESET)
+            SERVIDOR_EN_LINEA = None
+            pausa()
+        else:
+            print("  ⚠ Opción inválida, intenta de nuevo.")
+
+
+def config_tiempo():
+    opciones = [5, 7, 10, 15]
+    while True:
+        limpiar_pantalla()
+        titulo()
+        print()
+        print(MORADO + NEGRITA + "  ⏱ TIEMPO EN CONTRARRELOJ" + RESET)
+        separador()
+        print(f"\n  Tiempo actual por pregunta: {AMARILLO}{TIEMPO_RELOJ} s{RESET}\n")
+        for i, t in enumerate(opciones, 1):
+            marca = "  ← elegido" if t == TIEMPO_RELOJ else ""
+            print(f"  [{i}] {t} segundos{marca}")
+        print("  [0] ↩ Volver a configuración")
+        print()
+        opcion = input("  Elige una opción: ").strip()
+        if opcion == "0":
+            return
+        if opcion.isdigit() and int(opcion) in range(1, len(opciones) + 1):
+            TIEMPO_RELOJ = opciones[int(opcion) - 1]
+            guardar_config()
+            print(VERDE + f"\n  ✅ Tiempo establecido en {TIEMPO_RELOJ} s por pregunta." + RESET)
+            pausa()
+        else:
+            print("  ⚠ Opción inválida, intenta de nuevo.")
+
+
+def cambiar_contrasena():
+    limpiar_pantalla()
+    titulo()
+    print()
+    print(MORADO + NEGRITA + "  🔑 CAMBIAR MI CONTRASEÑA" + RESET)
+    separador()
+    actual = leer_contraseña(f"\n  Contraseña actual de '{NOMBRE_JUGADOR}': ")
+    nueva = leer_contraseña("  Nueva contraseña: ")
+    if not nueva:
+        print(ROJO + "\n  ⚠ La nueva contraseña no puede estar vacía." + RESET)
+        pausa()
+        return
+    repetida = leer_contraseña("  Repite la nueva contraseña: ")
+    if nueva != repetida:
+        print(ROJO + "\n  ⚠ Las contraseñas no coinciden." + RESET)
+        pausa()
+        return
+    if servidor_online():
+        resp = pedir_http("/api/cambiar_clave", {"nombre": NOMBRE_JUGADOR, "clave": actual,
+                                                 "clave_nueva": nueva})
+        if resp and resp.get("ok"):
+            CLAVE_ACTUAL = nueva
+            print(VERDE + "\n  ✅ Contraseña cambiada en el servidor." + RESET)
+        else:
+            print(ROJO + "\n  ⚠ Contraseña actual incorrecta o servidor no disponible." + RESET)
+        pausa()
+        return
+    usuarios = cargar_usuarios()
+    if NOMBRE_JUGADOR not in usuarios:
+        print(ROJO + f"\n  ⚠ Tu cuenta '{NOMBRE_JUGADOR}' no está registrada en esta máquina." + RESET)
+        pausa()
+        return
+    if hash_contraseña(NOMBRE_JUGADOR, actual) != usuarios[NOMBRE_JUGADOR]:
+        print(ROJO + "\n  ⚠ Contraseña actual incorrecta." + RESET)
+        pausa()
+        return
+    usuarios[NOMBRE_JUGADOR] = hash_contraseña(NOMBRE_JUGADOR, nueva)
+    guardar_usuarios(usuarios)
+    CLAVE_ACTUAL = nueva
+    print(VERDE + "\n  ✅ Contraseña cambiada. Guárdala bien." + RESET)
+    pausa()
+
+
+def resetear_progreso():
+    limpiar_pantalla()
+    titulo()
+    print()
+    print(MORADO + NEGRITA + "  🗑 RESTABLECER MI PROGRESO" + RESET)
+    separador()
+    print("\n  ⚠ Esto BORRARÁ para tu cuenta:")
+    print("     • Tus récords")
+    print("     • Tu puesto en el ranking")
+    print("     • Tus resultados")
+    print("     • Tus logros")
+    print("\n  No se puede deshacer. Tu contraseña se mantiene.\n")
+    primer = input("  ¿Seguro? (sí/no): ").strip().lower()
+    if primer not in ("si", "sí", "s"):
+        print("\n  ↩ No se borró nada.")
+        pausa()
+        return
+    segundo = input(ROJO + "  ¿Lo confirmas otra vez? (sí/no): " + RESET).strip().lower()
+    if segundo not in ("si", "sí", "s"):
+        print("\n  ↩ No se borró nada.")
+        pausa()
+        return
+
+    if os.path.exists(RECORDS):
+        with open(RECORDS, encoding="utf-8") as f:
+            lineas = [l for l in f if l.strip()]
+        restantes = [l for l in lineas if not l.startswith(NOMBRE_JUGADOR + "|")]
+        with open(RECORDS, "w", encoding="utf-8") as f:
+            f.writelines(restantes)
+
+    resultados = cargar_resultados()
+    resultados = [r for r in resultados if r.get("usuario") != NOMBRE_JUGADOR]
+    with open(RESULTADOS, "w", encoding="utf-8") as f:
+        json.dump(resultados, f, ensure_ascii=False, indent=2)
+
+    rankings = cargar_rankings()
+    if NOMBRE_JUGADOR in rankings:
+        del rankings[NOMBRE_JUGADOR]
+        guardar_rankings(rankings)
+
+    logros = cargar_logros()
+    if NOMBRE_JUGADOR in logros:
+        del logros[NOMBRE_JUGADOR]
+        guardar_logros(logros)
+
+    print(VERDE + "\n  ✅ Progreso restablecido. Empezamos de nuevo, ¿no?" + RESET)
+    pausa()
+
+
+def menu_config():
+    while True:
+        limpiar_pantalla()
+        titulo()
+        print()
+        print(MORADO + NEGRITA + "  ⚙️ CONFIGURACIÓN" + RESET + "\n")
+        print("  [1] 🌐 Servidor online")
+        print(f"  [2] ⏱ Tiempo contrarreloj ({AMARILLO}{TIEMPO_RELOJ} s{RESET})")
+        print("  [3] 🔑 Cambiar mi contraseña")
+        print("  [4] 🗑 Restablecer mi progreso")
+        print("  [0] ↩ Volver al menú")
+        print()
+        opcion = input("  Elige una opción: ").strip()
+        if opcion == "0":
+            return
+        if opcion == "1":
+            config_servidor()
+        elif opcion == "2":
+            config_tiempo()
+        elif opcion == "3":
+            cambiar_contrasena()
+        elif opcion == "4":
+            resetear_progreso()
+        elif opcion == "":
+            continue
+        else:
+            print("  ⚠ Opción inválida, intenta de nuevo.")
+
+
 def hash_contraseña(nombre, clave):
     d = hashlib.sha256()
     d.update(nombre.encode())
@@ -1581,11 +1818,12 @@ def pedir_nombre():
 
 
 def main():
+    cargar_config()
     pedir_nombre()
     while True:
         opcion = menu_principal()
         if opcion == "0":
-            print("\n  ¡Gracias por jugar! 🎉")
+            print(f"\n  ¡Gracias por jugar, {NOMBRE_JUGADOR}! ¡Nos vemos pronto! 🎉")
             break
         if opcion == "3":
             menu_personalizadas()
@@ -1604,6 +1842,9 @@ def main():
             continue
         if opcion == "8":
             ver_logros()
+            continue
+        if opcion == "9":
+            menu_config()
             continue
         if opcion == "2":
             tema = elegir_categoria()

@@ -18,17 +18,23 @@ Juego de preguntas y respuestas en español para terminal, con modo **online** e
 
 El proyecto es 100% portable: solo usa la biblioteca estándar de Python 3, no instala dependencias, y funciona en cualquier distro de Linux (Debian/Ubuntu, Fedora, Arch, openSUSE, Alpine, ...).
 
-### Opción rápida — instalador
+### Opción 1 — Un solo comando (recomendado)
 
-Detecta tu distro, instala `python3` si falta, copia los archivos a `~/juegos` y deja el comando `trivia` listo:
+No necesitas git: esto descarga el proyecto, instala `python3` si falta, deja los archivos en `~/juegos` y deja el comando `trivia` listo (Linux y macOS):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal/main/instalar.sh | bash
+```
+
+Al terminar, abre una terminal nueva y escribe `trivia`.
+
+### Opción 2 — Con git
 
 ```bash
 git clone https://github.com/juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal.git
 cd trivia-para-jugar-en-la-terminal
 ./instalar.sh
 ```
-
-Al terminar, abre una terminal nueva y escribe `trivia`.
 
 ### Opción manual — según distro
 
@@ -72,7 +78,7 @@ python trivia.py
 
 Para el modo online: `set TRIVIA_SERVIDOR=http://IP_DEL_SERVIDOR:8090` y después `python trivia.py`.
 
-### Sin git (solo descargar el zip)
+La "Opción 1" (un solo comando) ya cubre el caso de no tener git: descarga por ti el proyecto. Si prefieres bajar el zip a mano:
 
 ```bash
 curl -L -o trivia-terminal.zip https://github.com/juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal/archive/refs/heads/main.zip

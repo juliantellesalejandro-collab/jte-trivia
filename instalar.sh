@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
+REPO="juliantellesalejandro-collab/trivia-para-jugar-en-la-terminal"
+URL_TARBALL="https://github.com/$REPO/archive/refs/heads/main.tar.gz"
 DEST="${JTE_DEST:-$HOME/juegos}"
 BIN="$HOME/.local/bin"
 
 detectar_pm() {
-    if command -v apt-get >/dev/null 2>&1; then echo "apt"
+    if command -v brew >/dev/null 2>&1; then echo "brew"
+    elif command -v apt-get >/dev/null 2>&1; then echo "apt"
     elif command -v dnf >/dev/null 2>&1; then echo "dnf"
     elif command -v pacman >/dev/null 2>&1; then echo "pacman"
     elif command -v zypper >/dev/null 2>&1; then echo "zypper"
@@ -18,24 +21,45 @@ instalar_python() {
     local pm; pm=$(detectar_pm)
     echo "  ⚠ No se encontró python3. Instalándolo..."
     case "$pm" in
-        apt)  sudo apt-get update && sudo apt-get install -y python3 ;;
-        dnf)  sudo dnf install -y python3 ;;
+        brew)   brew install python ;;
+        apt)    sudo apt-get update && sudo apt-get install -y python3 ;;
+        dnf)    sudo dnf install -y python3 ;;
         pacman) sudo pacman -Sy --noconfirm python ;;
         zypper) sudo zypper -n install python3 ;;
-        apk)  sudo apk add python3 ;;
-        *) echo "  ❌ No sé qué gestor de paquetes usas." >&2; exit 1 ;;
+        apk)    sudo apk add python3 ;;
+        *)
+            echo "  ❌ No sé qué gestor de paquetes usas." >&2
+            echo "     Instala Python 3 de https://www.python.org/downloads/ y vuelve a ejecutar." >&2
+            exit 1 ;;
     esac
+}
+
+obtener_origen() {
+    local local_origen
+    local_origen="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+    if [ -r "$local_origen/trivia.py" ]; then
+        printf '%s' "$local_origen"
+        return 0
+    fi
+
+    echo "  ⬇ Descargando Trivia desde GitHub..." >&2
+    command -v curl >/dev/null 2>&1 || { echo "  ❌ Necesitas 'curl' para descargar." >&2; exit 1; }
+    local tmp; tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    curl -fsSL "$URL_TARBALL" -o "$tmp/trivia.tar.gz" || {
+        echo "  ❌ No pude descargar. ¿Tienes conexión a internet?" >&2
+        exit 1
+    }
+    tar -xzf "$tmp/trivia.tar.gz" -C "$tmp"
+    printf '%s' "$tmp/trivia-para-jugar-en-la-terminal-main"
 }
 
 main() {
     local pm; pm=$(detectar_pm)
-    local origen
-    origen=$(cd "$(dirname "$0")" && pwd)
+    local origen; origen=$(obtener_origen)
 
-    case "$origen" in
-        $HOME/juegos|"$DEST") : ;;
-        *) mkdir -p "$DEST"; cp "$origen/trivia.py" "$origen/servidor.py" "$DEST/"; echo "  📦 Copiados trivia.py y servidor.py a $DEST" ;;
-    esac
+    mkdir -p "$DEST"
+    cp "$origen/trivia.py" "$origen/servidor.py" "$DEST/"
 
     for f in "$DEST/trivia.py" "$DEST/servidor.py"; do
         [ -r "$f" ] || { echo "  ❌ No encuentro $f" >&2; exit 1; }
@@ -58,21 +82,26 @@ main() {
     }
     if command -v zsh >/dev/null 2>&1 && [ -f "$HOME/.zshrc" ]; then
         anadir_path "$HOME/.zshrc"
-    fi
-    if [ -n "$SHELL" ] && [[ "$(basename "$SHELL")" == bash ]]; then
+    elif [ -f "$HOME/.bash_profile" ]; then
+        anadir_path "$HOME/.bash_profile"
+    elif [ -f "$HOME/.bashrc" ]; then
         anadir_path "$HOME/.bashrc"
-    elif ! command -v zsh >/dev/null 2>&1; then
-        anadir_path "$HOME/.bashrc"
+    else
+        case "$(basename "${SHELL:-bash}")" in
+            bash) anadir_path "$HOME/.bashrc" ;;
+            zsh)  anadir_path "$HOME/.zshrc" ;;
+            *)    anadir_path "$HOME/.bashrc" ;;
+        esac
     fi
 
     echo
-    echo "  ✅ Instalado. Abre una terminal nueva y escribe:"
+    echo "  ✅ Trivia instalado en $DEST"
+    echo
+    echo "  Abre una terminal nueva y escribe:"
     echo "     trivia"
     echo
     echo "  Para el servidor (modo online en tu red):"
     echo "     python3 \"$DEST/servidor.py\""
 }
 
-if [ -n "$BASH_SOURCE" ] && [ "$0" = "$BASH_SOURCE" ]; then
-    main
-fi
+main "$@"
