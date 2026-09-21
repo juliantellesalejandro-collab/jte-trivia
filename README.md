@@ -36,38 +36,7 @@ cd trivia-para-jugar-en-la-terminal
 ./instalar.sh
 ```
 
-Tanto la opción 1 como la 2 instalan `python3` automáticamente si no lo tienes; **no tienes que instalarlo tú**.
-
-### Opción manual — solo si no quieres usar el instalador
-
-El juego está hecho en Python, así que necesita `python3`. Esta opción la usas tú si prefieres descargar y ejecutar a mano sin el instalador (entonces instalas `python3` tú mismo):
-
-```bash
-# Debian / Ubuntu / Mint
-sudo apt-get install -y python3
-cd trivia-para-jugar-en-la-terminal
-python3 trivia.py
-
-# Fedora / RHEL / Rocky
-sudo dnf install -y python3
-cd trivia-para-jugar-en-la-terminal
-python3 trivia.py
-
-# Arch / Manjaro
-sudo pacman -S python
-cd trivia-para-jugar-en-la-terminal
-python3 trivia.py
-
-# openSUSE
-sudo zypper install python3
-cd trivia-para-jugar-en-la-terminal
-python3 trivia.py
-
-# Alpine
-sudo apk add python3
-cd trivia-para-jugar-en-la-terminal
-python3 trivia.py
-```
+Tanto la opción 1 como la 2 instalan `python3` automáticamente si no lo tienes; **no tienes que instalar nada a mano**.
 
 ### Windows
 
